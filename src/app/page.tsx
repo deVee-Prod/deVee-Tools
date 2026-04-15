@@ -55,7 +55,6 @@ const handleConvert = async () => {
         await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js')
         await loadScript('https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js')
         
-        // הטריק החדש: פונים לחלון הדפדפן בצורה ש-Next.js לא מזהה כשגיאה!
         const win = window as any
         const FFmpegClass = win.FFmpegWASM.FFmpeg
         const { fetchFile, toBlobURL } = win.FFmpegUtil
@@ -77,7 +76,7 @@ const handleConvert = async () => {
         
         setProgressMsg("מייצא...")
         const data = await ffmpeg.readFile(outputName)
-        const blob = new Blob([data as Uint8Array])
+        const blob = new Blob([data as any]) // <--- הקסם קורה כאן
         
         downloadFile(blob, selectedFormat)
       }
@@ -89,7 +88,6 @@ const handleConvert = async () => {
       setProgressMsg("ממיר קובץ...")
     }
   }
-
   const downloadFile = (blob: Blob, format: string) => {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
