@@ -16,7 +16,6 @@ export default function FileConverterPage() {
 
   useEffect(() => {
     setMounted(true)
-    // עדכון כותרת הכרטיסיה בדפדפן
     document.title = "File Converter"
   }, [])
 
@@ -34,13 +33,9 @@ export default function FileConverterPage() {
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      // זה הקסם לספארי - נותן לו ערוץ נפרד לעבוד בו
+      // התיקון הקריטי לספארי - נתיב עבודה נפרד
       workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
-    
-    ffmpegRef.current = ffmpeg
-    return ffmpeg;
-  };
     
     ffmpegRef.current = ffmpeg
     return ffmpeg;
@@ -84,6 +79,7 @@ export default function FileConverterPage() {
     a.click()
   }
 
+  // התיקון שמונע את שגיאת ה-Build ב-Vercel
   if (!mounted) return <div className="min-h-screen bg-[#0a0a0a]" />
 
   return (
