@@ -12,9 +12,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// כאן קורה הקסם - השם שיופיע בכרטיסיה למעלה
+// המטא-דאטה הסופי והנקי שלך
 export const metadata: Metadata = {
-  title: "File Converter | deVee Tools",
+  title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="he" // שיניתי לעברית כי האתר שלך מימין לשמאל
+      lang="he"
       dir="rtl"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
