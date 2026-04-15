@@ -61,10 +61,15 @@ export default function FileConverterPage() {
         formData.append('format', selectedFormat)
         
         const response = await fetch('/api/convert', { method: 'POST', body: formData })
-        if (!response.ok) throw new Error("Server Error");
+        
+        if (!response.ok) {
+            // אם השרת נופל/לא תומך, ננסה בכל זאת מקומית כגיבוי
+            throw new Error("Server attempt failed");
+        }
+        
         downloadFile(await response.blob(), selectedFormat)
       } else {
-        // במחשב (Chrome/Edge) - ממשיכים עם המנוע המקומי
+        // במחשב (Chrome/Edge) - ממשיכים עם המנוע המקומי שעובד פגז
         const { fetchFile } = await import("@ffmpeg/util")
         setProgressMsg("טוען מנוע מקומי...")
         const ffmpeg = await loadFFmpeg();
@@ -77,7 +82,19 @@ export default function FileConverterPage() {
       }
     } catch (e) {
       console.error(e)
-      alert("שגיאה בהמרה. המערכת תנסה שוב.")
+      // אם הגענו לכאן ויש שגיאה, כנראה שצריך לחזור למנוע המקומי כ-Last Resort
+      try {
+        setProgressMsg("מנסה המרה מקומית...")
+        const { fetchFile } = await import("@ffmpeg/util")
+        const ffmpeg = await loadFFmpeg()
+        await ffmpeg.writeFile(file.name, await fetchFile(file))
+        const outputName = `output.${selectedFormat.toLowerCase()}`
+        await ffmpeg.exec(['-i', file.name, outputName])
+        const data = await ffmpeg.readFile(outputName)
+        downloadFile(new Blob([data as any]), selectedFormat)
+      } catch (innerE) {
+        alert("שגיאה בהמרה. אנא נסה להשתמש ב-Chrome במחשב.")
+      }
     } finally {
       setIsConverting(false)
     }
