@@ -9,30 +9,24 @@ export default function FileConverterPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
   const [progressMsg, setProgressMsg] = useState("ממיר קובץ...")
-  const [isLoaded, setIsLoaded] = useState(false) // מוודא שאנחנו בדפדפן
+  const [mounted, setMounted] = useState(false)
   
   const ffmpegRef = useRef<any>(null)
 
-  // טוענים את הכל רק כשהדף עולה בדפדפן (לא בשרת של Vercel)
   useEffect(() => {
-    setIsLoaded(true)
+    setMounted(true)
   }, [])
 
   const loadFFmpeg = async () => {
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
-
-    // ייבוא דינמי רק בזמן ריצה
     const { FFmpeg } = await import("@ffmpeg/ffmpeg")
     const { toBlobURL } = await import("@ffmpeg/util")
-    
     const ffmpeg = new FFmpeg()
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
     });
-    
     ffmpegRef.current = ffmpeg
     return ffmpeg;
   };
@@ -40,42 +34,30 @@ export default function FileConverterPage() {
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
-
     try {
-      const formatCategories = {
-        image: ["JPG", "PNG", "WEBP", "GIF", "BMP", "TIFF", "SVG"]
-      }
-
-      if (formatCategories.image.includes(selectedFormat)) {
+      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat)
+      if (isImage) {
         setProgressMsg("ממיר תמונה...")
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
         const response = await fetch('/api/convert', { method: 'POST', body: formData })
-        const blob = await response.blob()
-        downloadFile(blob, selectedFormat)
+        downloadFile(await response.blob(), selectedFormat)
       } else {
         const { fetchFile } = await import("@ffmpeg/util")
         setProgressMsg("טוען מנוע...")
         const ffmpeg = await loadFFmpeg();
-        
-        setProgressMsg("קורא קובץ...")
         await ffmpeg.writeFile(file.name, await fetchFile(file))
-        
         setProgressMsg("מעבד מדיה...")
         const outputName = `output.${selectedFormat.toLowerCase()}`
         await ffmpeg.exec(['-i', file.name, outputName])
-        
-        setProgressMsg("מייצא...")
         const data = await ffmpeg.readFile(outputName)
         downloadFile(new Blob([data as any]), selectedFormat)
       }
     } catch (e) {
-      console.error(e)
-      alert("התרחשה שגיאה. נסה לרענן.")
+      alert("שגיאה בהמרה")
     } finally {
       setIsConverting(false)
-      setProgressMsg("ממיר קובץ...")
     }
   }
 
@@ -83,59 +65,71 @@ export default function FileConverterPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `deVee_tools_${file?.name.split('.')[0]}.${format.toLowerCase()}`
+    a.download = `deVee_${file?.name.split('.')[0]}.${format.toLowerCase()}`
     a.click()
   }
 
-  // אם אנחנו בשרת, אל תציג כלום עדיין כדי למנוע את השגיאה
-  if (!isLoaded) return <div className="min-h-screen bg-[#0a0a0a]" />
+  if (!mounted) return <div className="min-h-screen bg-[#0a0a0a]" />
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-6" dir="rtl">
-      <header className="mb-12 flex flex-col items-center gap-4">
-        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/app_logo-aYPTnKATSOGLPTmF7VmPsJPmCkh6HF.png" alt="deVee" className="h-16" />
-        <h1 className="text-[10px] tracking-[0.5em] text-white/40 uppercase">File Converter</h1>
-      </header>
-
-      <div className="w-full max-w-lg bg-white/[0.03] backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/5 relative">
-        <div className="border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center gap-4 relative">
-          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-            {file ? <Check className="text-devee-red" /> : <Upload className="text-white/20" />}
-          </div>
-          <p className="text-sm font-light text-white/60">{file ? file.name : "גרור קובץ לכאן"}</p>
-        </div>
-
-        <button 
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-          className="w-full mt-6 bg-white/5 p-4 rounded-xl flex justify-between items-center text-sm"
-        >
-          <ChevronDown size={16} className={isDropdownOpen ? "rotate-180" : ""} />
-          {selectedFormat || "בחר פורמט"}
-        </button>
-        
-        {isDropdownOpen && (
-          <div className="absolute left-8 right-8 mt-2 bg-[#111] border border-white/10 rounded-xl overflow-hidden z-[100] max-h-48 overflow-y-auto shadow-2xl">
-            <div className="p-2 grid grid-cols-4 gap-1">
-              {["MP3", "WAV", "MP4", "MOV", "PNG", "JPG", "WEBP"].map(f => (
-                <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }} className="p-2 text-[10px] bg-white/5 rounded hover:bg-devee-red transition-colors">{f}</button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <button 
-          onClick={handleConvert} 
-          disabled={!file || !selectedFormat || isConverting}
-          className={`w-full mt-8 py-4 rounded-xl font-bold tracking-widest ${(!file || !selectedFormat) ? 'bg-white/5 text-white/10' : 'bg-devee-red text-white'}`}
-        >
-          {isConverting ? <div className="flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={18} /> {progressMsg}</div> : "המר קובץ"}
-        </button>
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#b22222]/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-[#b22222]/5 rounded-full blur-[100px]" />
       </div>
 
-      <footer className="mt-12 opacity-30 text-[9px] tracking-[0.3em] uppercase flex flex-col items-center gap-4">
-        <p>Powered by deVee Boutique Label</p>
-        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" className="h-10 w-10 rounded-full" />
+      <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
+        <div className="relative group">
+          <div className="absolute inset-0 bg-[#b22222]/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700" />
+          <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/app_logo-aYPTnKATSOGLPTmF7VmPsJPmCkh6HF.png" className="h-20 w-auto relative z-10 drop-shadow-[0_0_20px_rgba(178,34,34,0.3)]" />
+        </div>
+        <h1 className="mt-4 text-[10px] font-light tracking-[0.4em] text-white/40 uppercase">File Converter</h1>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <div className="w-full max-w-xl bg-white/[0.03] backdrop-blur-3xl rounded-[2.5rem] p-10 space-y-8 border border-white/5 shadow-2xl relative">
+          
+          <div className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-500 flex flex-col items-center gap-4 cursor-pointer
+            ${file ? 'border-[#b22222]/50 bg-[#b22222]/5' : 'border-white/10 hover:border-[#b22222]/30'}`}>
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+            <div className="w-20 h-20 rounded-full flex items-center justify-center bg-white/5">
+              {file ? <Check className="text-[#b22222] w-8 h-8" /> : <Upload className="text-white/20 w-8 h-8" />}
+            </div>
+            <p className="text-xl font-light tracking-wide">{file ? file.name : "גרור קובץ לכאן"}</p>
+          </div>
+
+          <div className="relative">
+            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all">
+              <ChevronDown className={`w-5 h-5 text-white/30 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <span className={selectedFormat ? "text-white" : "text-white/30"}>{selectedFormat || "בחר פורמט יעד"}</span>
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[100] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                <div className="p-3 grid grid-cols-4 gap-2">
+                  {["MP3", "WAV", "MP4", "MOV", "PNG", "JPG", "WEBP"].map(f => (
+                    <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }} 
+                    className={`p-3 rounded-xl text-[10px] font-mono border transition-all ${selectedFormat === f ? 'bg-[#b22222] border-[#b22222]' : 'bg-white/5 border-transparent hover:bg-white/10'}`}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button onClick={handleConvert} disabled={!file || !selectedFormat || isConverting}
+            className={`w-full py-5 rounded-2xl font-bold tracking-[0.2em] uppercase transition-all
+              ${(!file || !selectedFormat) ? 'bg-white/5 text-white/10' : 'bg-[#b22222] text-white hover:shadow-[0_0_30px_rgba(178,34,34,0.4)]'}`}>
+            {isConverting ? <div className="flex items-center justify-center gap-3"><Loader2 className="animate-spin" size={20} /> <span>{progressMsg}</span></div> : "בצע המרה"}
+          </button>
+        </div>
+      </main>
+
+      <footer className="relative z-10 py-12 flex flex-col items-center gap-4">
+        <p className="text-[10px] tracking-[0.2em] text-white/30 uppercase">Powered by deVee Boutique Label</p>
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" className="h-14 w-14 rounded-full border border-white/10 opacity-70" />
       </footer>
     </div>
   )
