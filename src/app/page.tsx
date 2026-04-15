@@ -14,33 +14,40 @@ export default function FileConverterPage() {
   
   const ffmpegRef = useRef<any>(null)
 
+  // הוספת Pre-connect לטעינה מהירה יותר
   useEffect(() => {
-    setMounted(true)
-    document.title = "File Converter"
-  }, [])
+    setMounted(true);
+    document.title = "File Converter";
+    
+    // יוצר חיבור מוקדם לשרתי המנוע בלי לחכות לטעינה
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = 'https://unpkg.com';
+    document.head.appendChild(link);
+  }, []);
 
   const loadFFmpeg = async () => {
+    // אם כבר טעון, אל תעשה כלום
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
     
-    const { FFmpeg } = await import("@ffmpeg/ffmpeg")
-    const { toBlobURL } = await import("@ffmpeg/util")
+    const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+    const { toBlobURL } = await import("@ffmpeg/util");
     
-    const ffmpeg = new FFmpeg()
+    const ffmpeg = new FFmpeg();
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     
-    setProgressMsg("מכין מנוע לספארי...")
+    // בספארי, אנחנו רוצים להראות למשתמש שקורה משהו כדי שלא יחשוב שהאתר נתקע
+    setProgressMsg("מכין את המנוע (בפעם הראשונה)...");
     
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      // התיקון הקריטי לספארי - נתיב עבודה נפרד
       workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
     
-    ffmpegRef.current = ffmpeg
+    ffmpegRef.current = ffmpeg;
     return ffmpeg;
   };
-
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
