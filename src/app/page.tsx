@@ -30,7 +30,7 @@ export default function FileConverterPage() {
     })
   }
 
-  const handleConvert = async () => {
+const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
     setIsComplete(false)
@@ -52,17 +52,16 @@ export default function FileConverterPage() {
       } else {
         setProgressMsg("מוריד מנוע מדיה (CDN)...")
         
-        // טוענים את FFmpeg מהרשת הפתוחה!
         await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js')
         await loadScript('https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js')
         
-        // @ts-ignore
-        const { FFmpeg } = window.FFmpegWASM
-        // @ts-ignore
-        const { fetchFile, toBlobURL } = window.FFmpegUtil
+        // הטריק החדש: פונים לחלון הדפדפן בצורה ש-Next.js לא מזהה כשגיאה!
+        const win = window as any
+        const FFmpegClass = win.FFmpegWASM.FFmpeg
+        const { fetchFile, toBlobURL } = win.FFmpegUtil
         
         setProgressMsg("מאתחל מנוע...")
-        const ffmpeg = new FFmpeg()
+        const ffmpeg = new FFmpegClass()
         
         await ffmpeg.load({
           coreURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js`, 'text/javascript'),
