@@ -41,7 +41,7 @@ export default function FileConverterPage() {
         a.remove()
         setIsComplete(true)
       } else {
-        alert("Conversion failed. Please ensure the file is in a valid format.")
+        alert("שגיאת המרה: כרגע המנוע תומך בתמונות בלבד (JPG/PNG). שדרוג אודיו בדרך!")
       }
     } catch (e) { 
       console.error(e) 
@@ -53,7 +53,7 @@ export default function FileConverterPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
       
       {/* Background Glows for depth */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-devee-red/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-devee-red/5 rounded-full blur-[100px]" />
       </div>
@@ -93,22 +93,22 @@ export default function FileConverterPage() {
             </div>
           </div>
 
-          {/* Format Selector - התיקון של ה-Z-index כאן */}
-          <div className="relative z-50">
+          {/* Format Selector - התיקון הגדול כאן */}
+          <div className="relative z-[999]">
             <button 
               type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all group cursor-pointer relative z-50"
+              className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all group cursor-pointer relative z-[999]"
             >
               <ChevronDown className={`w-5 h-5 text-white/30 transition-transform duration-500 ${isDropdownOpen ? 'rotate-180 text-devee-red' : ''}`} />
               <span className={`tracking-wide ${selectedFormat ? "text-white" : "text-white/30"}`}>{selectedFormat || "בחר פורמט יעד"}</span>
             </button>
             
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden z-[100] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[999] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 max-h-[250px] overflow-y-auto scrollbar-thin scrollbar-thumb-devee-red/50 scrollbar-track-transparent">
                 {Object.entries(formatCategories).map(([key, cat]) => (
-                  <div key={key} className="border-b border-white/5 last:border-0 relative z-[100]">
-                    <div className="px-5 py-3 bg-white/[0.02] flex items-center justify-end gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+                  <div key={key} className="border-b border-white/5 last:border-0 relative">
+                    <div className="px-5 py-3 bg-white/[0.02] flex items-center justify-end gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] sticky top-0 z-10 backdrop-blur-md">
                       {cat.label} <cat.icon size={14} className="text-devee-red/60" />
                     </div>
                     <div className="grid grid-cols-4 gap-2 p-3" dir="ltr">
@@ -122,7 +122,7 @@ export default function FileConverterPage() {
                             setSelectedFormat(f); 
                             setIsDropdownOpen(false); 
                           }}
-                          className={`p-2.5 rounded-xl text-[11px] font-mono transition-all border cursor-pointer relative z-[100] hover:scale-105 active:scale-95 ${selectedFormat === f ? 'bg-devee-red border-devee-red text-white shadow-[0_0_15px_rgba(178,34,34,0.3)]' : 'bg-white/5 border-transparent text-white/60 hover:border-white/20 hover:text-white hover:bg-white/10'}`}>
+                          className={`p-2.5 rounded-xl text-[11px] font-mono transition-all border cursor-pointer relative hover:scale-105 active:scale-95 ${selectedFormat === f ? 'bg-devee-red border-devee-red text-white shadow-[0_0_15px_rgba(178,34,34,0.3)]' : 'bg-white/5 border-transparent text-white/60 hover:border-white/20 hover:text-white hover:bg-white/10'}`}>
                           {f}
                         </button>
                       ))}
@@ -154,7 +154,7 @@ export default function FileConverterPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-12 flex flex-col items-center gap-5 pointer-events-none">
+      <footer className="relative z-0 py-12 flex flex-col items-center gap-5 pointer-events-none">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[11px] tracking-widest text-white/50 font-medium">
             Powered by deVee Boutique Label
