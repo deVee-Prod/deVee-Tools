@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, ChevronDown, Loader2, Check, FileAudio, FileVideo, FileImage } from "lucide-react"
+import { Upload, ChevronDown, Loader2, Check } from "lucide-react"
 
 export default function FileConverterPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -14,26 +14,23 @@ export default function FileConverterPage() {
   
   const ffmpegRef = useRef<any>(null)
 
-  // הוספת Pre-connect לטעינה מהירה יותר
   useEffect(() => {
     setMounted(true);
     document.title = "File Converter";
     
-    // יוצר חיבור מוקדם לשרתי המנוע בלי לחכות לטעינה
     const link = document.createElement('link');
     link.rel = 'preconnect';
-    link.href = 'https://unpkg.com';
+    link.href = 'https://cdnjs.cloudflare.com';
     document.head.appendChild(link);
   }, []);
 
- const loadFFmpeg = async () => {
+  const loadFFmpeg = async () => {
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
     
     const { FFmpeg } = await import("@ffmpeg/ffmpeg")
     const { toBlobURL } = await import("@ffmpeg/util")
     
     const ffmpeg = new FFmpeg()
-    // שימוש ב-Cloudflare CDN במקום unpkg
     const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/dist/umd";
     
     await ffmpeg.load({
@@ -45,21 +42,31 @@ export default function FileConverterPage() {
     ffmpegRef.current = ffmpeg
     return ffmpeg;
   };
+
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
+    
     try {
-      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat.toUpperCase())
-      if (isImage) {
-        setProgressMsg("ממיר תמונה...")
+      // זיהוי אם המשתמש בספארי או בנייד
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat.toUpperCase());
+
+      // ה-Hybrid Mode: בספארי או מובייל שולחים לשרת כדי לעקוף את הלאג
+      if (isSafari || isMobile || isImage) {
+        setProgressMsg("ממיר בשרת deVee (מהיר)...");
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
+        
         const response = await fetch('/api/convert', { method: 'POST', body: formData })
+        if (!response.ok) throw new Error("Server Error");
         downloadFile(await response.blob(), selectedFormat)
       } else {
+        // במחשב (Chrome/Edge) - ממשיכים עם המנוע המקומי
         const { fetchFile } = await import("@ffmpeg/util")
-        setProgressMsg("טוען מנוע...")
+        setProgressMsg("טוען מנוע מקומי...")
         const ffmpeg = await loadFFmpeg();
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         setProgressMsg("מעבד מדיה...")
@@ -69,7 +76,8 @@ export default function FileConverterPage() {
         downloadFile(new Blob([data as any]), selectedFormat)
       }
     } catch (e) {
-      alert("שגיאה בהמרה")
+      console.error(e)
+      alert("שגיאה בהמרה. המערכת תנסה שוב.")
     } finally {
       setIsConverting(false)
     }
@@ -83,7 +91,6 @@ export default function FileConverterPage() {
     a.click()
   }
 
-  // התיקון שמונע את שגיאת ה-Build ב-Vercel
   if (!mounted) return <div className="min-h-screen bg-[#0a0a0a]" />
 
   return (
