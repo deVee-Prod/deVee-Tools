@@ -31,20 +31,32 @@ export default function FileConverterPage() {
     })
   }
 
-  const handleConvert = async () => {
+const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
     setIsComplete(false)
 
     try {
       if (formatCategories.image.formats.includes(selectedFormat)) {
-        // ... (הקוד של התמונות נשאר אותו דבר)
+        setProgressMsg("ממיר תמונה בשרת...")
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('format', selectedFormat)
+        
+        const response = await fetch('/api/convert', { method: 'POST', body: formData })
+        if (response.ok) {
+          const blob = await response.blob()
+          downloadFile(blob, selectedFormat)
+        } else {
+          throw new Error("Server conversion failed")
+        }
       } else {
         setProgressMsg("טוען מנוע מקומי...")
         
-        // טוענים מהתיקייה שיצרת ב-public!
-        await loadScript('/ffmpeg/ffmpeg.js')
-        await loadScript('/ffmpeg/index.js')
+        // טעינת הסקריפטים עם נתיב מלא למניעת תקיעות
+        const origin = window.location.origin;
+        await loadScript(`${origin}/ffmpeg/ffmpeg.js`)
+        await loadScript(`${origin}/ffmpeg/index.js`)
         
         const win = window as any
         const { FFmpeg } = win.FFmpegWASM
@@ -52,9 +64,10 @@ export default function FileConverterPage() {
         
         const ffmpeg = new FFmpeg()
         
+        // התיקון כאן: שימוש ב-toBlobURL כדי לוודא שהדפדפן לא חוסם את ה-WASM
         await ffmpeg.load({
-          coreURL: await toBlobURL('/ffmpeg/ffmpeg-core.js', 'text/javascript'),
-          wasmURL: await toBlobURL('/ffmpeg/ffmpeg-core.wasm', 'application/wasm'),
+          coreURL: await toBlobURL(`${origin}/ffmpeg/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${origin}/ffmpeg/ffmpeg-core.wasm`, 'application/wasm'),
         })
 
         await ffmpeg.writeFile(file.name, await fetchFile(file))
@@ -67,10 +80,11 @@ export default function FileConverterPage() {
         downloadFile(blob, selectedFormat)
       }
     } catch (e) { 
-      console.error(e)
-      alert("שגיאה. וודא שכל קבצי המנוע נמצאים בתיקיית public/ffmpeg")
+      console.error("Conversion Error:", e)
+      alert("שגיאה בטעינת המנוע. נסה לעשות Hard Refresh (Cmd+Shift+R)")
     } finally { 
       setIsConverting(false)
+      setProgressMsg("ממיר קובץ...")
     }
   }
 
