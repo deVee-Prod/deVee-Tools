@@ -12,10 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// המטא-דאטה הסופי והנקי שלך
+// כאן הגדרתי את השם הנקי ואת הנתיב לאייקון שלך
 export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
+  icons: {
+    icon: "/icon.png", // מוודא שזה מושך את הקובץ שלך
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
