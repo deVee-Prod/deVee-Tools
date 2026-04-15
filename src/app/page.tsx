@@ -26,18 +26,15 @@ export default function FileConverterPage() {
     document.head.appendChild(link);
   }, []);
 
-  const loadFFmpeg = async () => {
-    // אם כבר טעון, אל תעשה כלום
+ const loadFFmpeg = async () => {
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
     
-    const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-    const { toBlobURL } = await import("@ffmpeg/util");
+    const { FFmpeg } = await import("@ffmpeg/ffmpeg")
+    const { toBlobURL } = await import("@ffmpeg/util")
     
-    const ffmpeg = new FFmpeg();
+    const ffmpeg = new FFmpeg()
+    // שימוש ב-Cloudflare CDN במקום unpkg
     const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/dist/umd";
-    
-    // בספארי, אנחנו רוצים להראות למשתמש שקורה משהו כדי שלא יחשוב שהאתר נתקע
-    setProgressMsg("מכין את המנוע (בפעם הראשונה)...");
     
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
@@ -45,7 +42,7 @@ export default function FileConverterPage() {
       workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
     
-    ffmpegRef.current = ffmpeg;
+    ffmpegRef.current = ffmpeg
     return ffmpeg;
   };
   const handleConvert = async () => {

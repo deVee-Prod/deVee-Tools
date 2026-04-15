@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        {/* הזרקת מרץ לספארי - חייב להיות כאן כדי לעבוד מיידית */}
+        {/* זה ה-Turbo לספארי */}
         <script src="/coi-serviceworker.js" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
