@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { Upload, ChevronDown, Loader2, Check, FileAudio, FileVideo, FileImage } from "lucide-react"
-import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 const formatCategories = {
   audio: { label: "אודיו", icon: FileAudio, formats: ["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "WMA"] },
@@ -40,6 +38,11 @@ export default function FileConverterPage() {
           alert("שגיאה בהמרת התמונה")
         }
       } else {
+        // הטריק שלנו: מייבאים את המנוע רק ברגע האמת!
+        setProgressMsg("מייבא מנוע מדיה...")
+        const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+        const { fetchFile, toBlobURL } = await import('@ffmpeg/util')
+        
         setProgressMsg("טוען מנוע מדיה מתקדם...")
         const ffmpeg = new FFmpeg()
         
@@ -51,7 +54,7 @@ export default function FileConverterPage() {
         setProgressMsg("קורא קובץ...")
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         
-        setProgressMsg("מעבד אודיו/וידאו...")
+        setProgressMsg("מעבד אודיו/וידאו (זה יכול לקחת רגע)...")
         const outputName = `devee_output.${selectedFormat.toLowerCase()}`
         await ffmpeg.exec(['-i', file.name, outputName])
         
