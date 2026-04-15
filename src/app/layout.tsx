@@ -12,12 +12,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// כאן הגדרתי את השם הנקי ואת הנתיב לאייקון שלך
 export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: "/icon.png", // מוודא שזה מושך את הקובץ שלך
+    icon: "/icon.png",
     apple: "/icon.png",
   },
 };
@@ -28,12 +27,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="he"
-      dir="rtl"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="he" dir="rtl">
+      <head>
+        {/* הזרקת מרץ לספארי - חייב להיות כאן כדי לעבוד מיידית */}
+        <script src="/coi-serviceworker.js" async></script>
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
+        {children}
+      </body>
     </html>
   );
 }
