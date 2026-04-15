@@ -18,6 +18,18 @@ export default function FileConverterPage() {
   const [isComplete, setIsComplete] = useState(false)
   const [progressMsg, setProgressMsg] = useState("ממיר קובץ...")
 
+  // פונקציית ה-Bypass: מזריקה את המנוע ישירות לדפדפן מבלי לעבור בשרת
+  const loadScript = (src: string) => {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve(true)
+      const script = document.createElement('script')
+      script.src = src
+      script.onload = resolve
+      script.onerror = reject
+      document.body.appendChild(script)
+    })
+  }
+
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
@@ -38,12 +50,18 @@ export default function FileConverterPage() {
           alert("שגיאה בהמרת התמונה")
         }
       } else {
-        // הטריק שלנו: מייבאים את המנוע רק ברגע האמת!
-        setProgressMsg("מייבא מנוע מדיה...")
-        const { FFmpeg } = await import('@ffmpeg/ffmpeg')
-        const { fetchFile, toBlobURL } = await import('@ffmpeg/util')
+        setProgressMsg("מוריד מנוע מדיה (CDN)...")
         
-        setProgressMsg("טוען מנוע מדיה מתקדם...")
+        // טוענים את FFmpeg מהרשת הפתוחה!
+        await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js')
+        await loadScript('https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js')
+        
+        // @ts-ignore
+        const { FFmpeg } = window.FFmpegWASM
+        // @ts-ignore
+        const { fetchFile, toBlobURL } = window.FFmpegUtil
+        
+        setProgressMsg("מאתחל מנוע...")
         const ffmpeg = new FFmpeg()
         
         await ffmpeg.load({
@@ -54,7 +72,7 @@ export default function FileConverterPage() {
         setProgressMsg("קורא קובץ...")
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         
-        setProgressMsg("מעבד אודיו/וידאו (זה יכול לקחת רגע)...")
+        setProgressMsg("מעבד מדיה (זה יכול לקחת רגע)...")
         const outputName = `devee_output.${selectedFormat.toLowerCase()}`
         await ffmpeg.exec(['-i', file.name, outputName])
         
