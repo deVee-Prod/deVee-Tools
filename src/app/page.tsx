@@ -27,14 +27,12 @@ export default function FileConverterPage() {
     formData.append('format', selectedFormat)
 
     try {
-      // Connect to the Python API
       const response = await fetch('/api/convert', { method: 'POST', body: formData })
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        // Sanitize the filename for the download
         const cleanFileName = file.name.split('.').slice(0, -1).join('.');
         const newFileName = `deVee_${cleanFileName}.${selectedFormat.toLowerCase()}`;
         a.download = newFileName
@@ -43,8 +41,7 @@ export default function FileConverterPage() {
         a.remove()
         setIsComplete(true)
       } else {
-        // Handle conversion errors
-        alert("Conversion failed. Please ensure the file is in a valid image format.")
+        alert("Conversion failed. Please ensure the file is in a valid format.")
       }
     } catch (e) { 
       console.error(e) 
@@ -64,7 +61,7 @@ export default function FileConverterPage() {
       {/* Header */}
       <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
         <div className="relative group">
-          <div className="absolute inset-0 bg-devee-red/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="absolute inset-0 bg-devee-red/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           <img 
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/app_logo-aYPTnKATSOGLPTmF7VmPsJPmCkh6HF.png" 
             alt="deVee" 
@@ -76,18 +73,18 @@ export default function FileConverterPage() {
 
       {/* Main Module */}
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="w-full max-w-xl glass-module red-glow-ui rounded-[2.5rem] p-10 space-y-8 border border-white/5">
+        <div className="w-full max-w-xl glass-module red-glow-ui rounded-[2.5rem] p-10 space-y-8 border border-white/5 relative z-20">
           
           {/* Dropzone */}
           <div 
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setIsDragOver(false); setFile(e.dataTransfer.files[0]); setIsComplete(false); }}
-            className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-500 flex flex-col items-center gap-4 cursor-pointer
+            className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-500 flex flex-col items-center gap-4 cursor-pointer z-10
               ${isDragOver ? 'border-devee-red bg-devee-red/10 scale-[1.01]' : 'border-white/10 hover:border-devee-red/40 hover:bg-white/[0.02]'}`}
           >
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => { setFile(e.target.files?.[0] || null); setIsComplete(false); }} />
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${file ? 'bg-devee-red/20Rotate-0' : 'bg-white/5 shadow-inner'}`}>
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => { setFile(e.target.files?.[0] || null); setIsComplete(false); setIsDropdownOpen(false); }} />
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${file ? 'bg-devee-red/20 rotate-0' : 'bg-white/5 shadow-inner'}`}>
               {file ? <Check className="text-devee-red w-8 h-8" /> : <Upload className="text-white/30 w-8 h-8" />}
             </div>
             <div className="text-center">
@@ -96,27 +93,36 @@ export default function FileConverterPage() {
             </div>
           </div>
 
-          {/* Format Selector */}
-          <div className="relative">
+          {/* Format Selector - התיקון של ה-Z-index כאן */}
+          <div className="relative z-50">
             <button 
+              type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all group"
+              className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all group cursor-pointer relative z-50"
             >
               <ChevronDown className={`w-5 h-5 text-white/30 transition-transform duration-500 ${isDropdownOpen ? 'rotate-180 text-devee-red' : ''}`} />
               <span className={`tracking-wide ${selectedFormat ? "text-white" : "text-white/30"}`}>{selectedFormat || "בחר פורמט יעד"}</span>
             </button>
             
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden z-50 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl overflow-hidden z-[100] shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300">
                 {Object.entries(formatCategories).map(([key, cat]) => (
-                  <div key={key} className="border-b border-white/5 last:border-0">
+                  <div key={key} className="border-b border-white/5 last:border-0 relative z-[100]">
                     <div className="px-5 py-3 bg-white/[0.02] flex items-center justify-end gap-3 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
                       {cat.label} <cat.icon size={14} className="text-devee-red/60" />
                     </div>
                     <div className="grid grid-cols-4 gap-2 p-3" dir="ltr">
                       {cat.formats.map(f => (
-                        <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }}
-                          className={`p-2.5 rounded-xl text-[11px] font-mono transition-all border ${selectedFormat === f ? 'bg-devee-red border-devee-red text-white shadow-[0_0_15px_rgba(178,34,34,0.3)]' : 'bg-white/5 border-transparent text-white/60 hover:border-white/20 hover:text-white'}`}>
+                        <button 
+                          key={f} 
+                          type="button"
+                          onClick={(e) => { 
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedFormat(f); 
+                            setIsDropdownOpen(false); 
+                          }}
+                          className={`p-2.5 rounded-xl text-[11px] font-mono transition-all border cursor-pointer relative z-[100] hover:scale-105 active:scale-95 ${selectedFormat === f ? 'bg-devee-red border-devee-red text-white shadow-[0_0_15px_rgba(178,34,34,0.3)]' : 'bg-white/5 border-transparent text-white/60 hover:border-white/20 hover:text-white hover:bg-white/10'}`}>
                           {f}
                         </button>
                       ))}
@@ -129,9 +135,10 @@ export default function FileConverterPage() {
 
           {/* Convert Button */}
           <button 
+            type="button"
             onClick={handleConvert}
             disabled={!file || !selectedFormat || isConverting}
-            className={`w-full py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition-all duration-500
+            className={`w-full py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition-all duration-500 relative z-10
               ${(!file || !selectedFormat) 
                 ? 'bg-white/5 text-white/10 cursor-not-allowed' 
                 : 'bg-devee-red text-white hover:shadow-[0_0_40px_rgba(178,34,34,0.4)] hover:scale-[1.01] active:scale-[0.98]'}`}
@@ -146,21 +153,18 @@ export default function FileConverterPage() {
         </div>
       </main>
 
-      {/* Footer - תוקן והותאם להוראות האחרונות */}
-      <footer className="relative z-10 py-12 flex flex-col items-center gap-5">
+      {/* Footer */}
+      <footer className="relative z-10 py-12 flex flex-col items-center gap-5 pointer-events-none">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[11px] tracking-widest text-white/50 font-medium">
             Powered by deVee Boutique Label
           </p>
-          {/* THE RED LINE WAS REMOVED FROM HERE */}
         </div>
-        <div className="relative group">
-           {/* Glow Effect Remains */}
+        <div className="relative group pointer-events-auto">
            <div className="absolute inset-0 bg-devee-red/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-all duration-1000" />
            <img 
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" 
             alt="deVee Label Logo" 
-            // THE GRAYSCALE CLASSES WERE REMOVED, RESTORING ORIGINAL COLOR
             className="h-16 w-16 rounded-full border border-white/10 transition-all duration-1000 object-cover cursor-pointer"
           />
         </div>
