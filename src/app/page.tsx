@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState } from "react"
 import { Upload, ChevronDown, Loader2, Check, FileAudio, FileVideo, FileImage } from "lucide-react"
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 const formatCategories = {
   audio: { label: "אודיו", icon: FileAudio, formats: ["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "WMA"] },
@@ -16,49 +18,77 @@ export default function FileConverterPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [progressMsg, setProgressMsg] = useState("ממיר קובץ...")
 
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
     setIsComplete(false)
 
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('format', selectedFormat)
-
     try {
-      const response = await fetch('/api/convert', { method: 'POST', body: formData })
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        const cleanFileName = file.name.split('.').slice(0, -1).join('.');
-        const newFileName = `deVee_${cleanFileName}.${selectedFormat.toLowerCase()}`;
-        a.download = newFileName
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        setIsComplete(true)
+      if (formatCategories.image.formats.includes(selectedFormat)) {
+        setProgressMsg("ממיר תמונה בשרת...")
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('format', selectedFormat)
+        
+        const response = await fetch('/api/convert', { method: 'POST', body: formData })
+        if (response.ok) {
+          const blob = await response.blob()
+          downloadFile(blob, selectedFormat)
+        } else {
+          alert("שגיאה בהמרת התמונה")
+        }
       } else {
-        alert("שגיאת המרה: כרגע המנוע תומך בתמונות בלבד (JPG/PNG). שדרוג אודיו בדרך!")
+        setProgressMsg("טוען מנוע מדיה מתקדם...")
+        const ffmpeg = new FFmpeg()
+        
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm`, 'application/wasm'),
+        })
+
+        setProgressMsg("קורא קובץ...")
+        await ffmpeg.writeFile(file.name, await fetchFile(file))
+        
+        setProgressMsg("מעבד אודיו/וידאו...")
+        const outputName = `devee_output.${selectedFormat.toLowerCase()}`
+        await ffmpeg.exec(['-i', file.name, outputName])
+        
+        setProgressMsg("מייצא...")
+        const data = await ffmpeg.readFile(outputName)
+        const blob = new Blob([data as Uint8Array])
+        
+        downloadFile(blob, selectedFormat)
       }
     } catch (e) { 
-      console.error(e) 
+      console.error(e)
+      alert("התרחשה שגיאה במהלך ההמרה")
+    } finally { 
+      setIsConverting(false)
+      setProgressMsg("ממיר קובץ...")
     }
-    finally { setIsConverting(false) }
+  }
+
+  const downloadFile = (blob: Blob, format: string) => {
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const cleanFileName = file!.name.split('.').slice(0, -1).join('.')
+    a.download = `deVee_${cleanFileName}.${format.toLowerCase()}`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    setIsComplete(true)
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
-      
-      {/* Background Glows for depth */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-devee-red/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-devee-red/5 rounded-full blur-[100px]" />
       </div>
 
-      {/* Header */}
       <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
         <div className="relative group">
           <div className="absolute inset-0 bg-devee-red/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
@@ -71,11 +101,8 @@ export default function FileConverterPage() {
         <h1 className="mt-4 text-sm font-light tracking-[0.4em] text-white/50 uppercase">File Converter</h1>
       </header>
 
-      {/* Main Module */}
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-xl glass-module red-glow-ui rounded-[2.5rem] p-10 space-y-8 border border-white/5 relative z-20">
-          
-          {/* Dropzone */}
           <div 
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
@@ -93,7 +120,6 @@ export default function FileConverterPage() {
             </div>
           </div>
 
-          {/* Format Selector - התיקון הגדול כאן */}
           <div className="relative z-[999]">
             <button 
               type="button"
@@ -133,7 +159,6 @@ export default function FileConverterPage() {
             )}
           </div>
 
-          {/* Convert Button */}
           <button 
             type="button"
             onClick={handleConvert}
@@ -146,14 +171,13 @@ export default function FileConverterPage() {
             {isConverting ? (
               <div className="flex items-center justify-center gap-3">
                 <Loader2 className="animate-spin w-5 h-5" />
-                <span className="text-sm">ממיר קובץ...</span>
+                <span className="text-sm">{progressMsg}</span>
               </div>
             ) : isComplete ? "המר קובץ" : "המר קובץ"}
           </button>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="relative z-0 py-12 flex flex-col items-center gap-5 pointer-events-none">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[11px] tracking-widest text-white/50 font-medium">
