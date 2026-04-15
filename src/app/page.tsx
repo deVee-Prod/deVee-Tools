@@ -34,7 +34,7 @@ export default function FileConverterPage() {
     const { toBlobURL } = await import("@ffmpeg/util");
     
     const ffmpeg = new FFmpeg();
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/dist/umd";
     
     // בספארי, אנחנו רוצים להראות למשתמש שקורה משהו כדי שלא יחשוב שהאתר נתקע
     setProgressMsg("מכין את המנוע (בפעם הראשונה)...");
