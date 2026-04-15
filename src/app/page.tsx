@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Upload, ChevronDown, Loader2, Check, FileAudio, FileVideo, FileImage } from "lucide-react"
+import { FFmpeg } from "@ffmpeg/ffmpeg"
+import { toBlobURL, fetchFile } from "@ffmpeg/util"
 
 const formatCategories = {
   audio: { label: "אודיו", icon: FileAudio, formats: ["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "WMA"] },
@@ -11,30 +13,27 @@ const formatCategories = {
 
 export default function FileConverterPage() {
   const [file, setFile] = useState<File | null>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
   const [progressMsg, setProgressMsg] = useState("ממיר קובץ...")
+  const ffmpegRef = useRef(new FFmpeg())
 
-  const loadScript = (src: string) => {
-    return new Promise((resolve, reject) => {
-      if (typeof window === 'undefined') return resolve(true)
-      if (document.querySelector(`script[src="${src}"]`)) return resolve(true)
-      const script = document.createElement('script')
-      script.src = src
-      script.crossOrigin = "anonymous"
-      script.onload = resolve
-      script.onerror = reject
-      document.body.appendChild(script)
-    })
-  }
+  const loadFFmpeg = async () => {
+    const ffmpeg = ffmpegRef.current;
+    if (ffmpeg.loaded) return ffmpeg;
 
-const handleConvert = async () => {
+    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+    });
+    return ffmpeg;
+  };
+
+  const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
-    setIsComplete(false)
 
     try {
       if (formatCategories.image.formats.includes(selectedFormat)) {
@@ -42,152 +41,94 @@ const handleConvert = async () => {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
-        
         const response = await fetch('/api/convert', { method: 'POST', body: formData })
-        if (response.ok) {
-          const blob = await response.blob()
-          downloadFile(blob, selectedFormat)
-        } else {
-          throw new Error("Server conversion failed")
-        }
+        if (!response.ok) throw new Error()
+        downloadFile(await response.blob(), selectedFormat)
       } else {
-        setProgressMsg("טוען מנוע מקומי...")
+        setProgressMsg("טוען מנוע (חד פעמי)...")
+        const ffmpeg = await loadFFmpeg();
         
-        // טעינת הסקריפטים עם נתיב מלא למניעת תקיעות
-        const origin = window.location.origin;
-        await loadScript(`${origin}/ffmpeg/ffmpeg.js`)
-        await loadScript(`${origin}/ffmpeg/index.js`)
-        
-        const win = window as any
-        const { FFmpeg } = win.FFmpegWASM
-        const { fetchFile, toBlobURL } = win.FFmpegUtil
-        
-        const ffmpeg = new FFmpeg()
-        
-        // התיקון כאן: שימוש ב-toBlobURL כדי לוודא שהדפדפן לא חוסם את ה-WASM
-        await ffmpeg.load({
-          coreURL: await toBlobURL(`${origin}/ffmpeg/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${origin}/ffmpeg/ffmpeg-core.wasm`, 'application/wasm'),
-        })
-
+        setProgressMsg("קורא קובץ...")
         await ffmpeg.writeFile(file.name, await fetchFile(file))
+        
         setProgressMsg("מעבד מדיה...")
-        const outputName = `devee_output.${selectedFormat.toLowerCase()}`
+        const outputName = `output.${selectedFormat.toLowerCase()}`
         await ffmpeg.exec(['-i', file.name, outputName])
         
+        setProgressMsg("מייצא...")
         const data = await ffmpeg.readFile(outputName)
-        const blob = new Blob([data as any])
-        downloadFile(blob, selectedFormat)
+        downloadFile(new Blob([data as any]), selectedFormat)
       }
-    } catch (e) { 
-      console.error("Conversion Error:", e)
-      alert("שגיאה בטעינת המנוע. נסה לעשות Hard Refresh (Cmd+Shift+R)")
-    } finally { 
+    } catch (e) {
+      console.error(e)
+      alert("התרחשה שגיאה. נסה לרענן את הדף.")
+    } finally {
       setIsConverting(false)
       setProgressMsg("ממיר קובץ...")
     }
   }
 
   const downloadFile = (blob: Blob, format: string) => {
-    const url = window.URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    const cleanName = file?.name.split('.')[0] || 'file'
-    a.download = `deVee_${cleanName}.${format.toLowerCase()}`
-    document.body.appendChild(a)
+    a.download = `deVee_${file!.name.split('.')[0]}.${format.toLowerCase()}`
     a.click()
-    a.remove()
-    setIsComplete(true)
+    URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-6 font-sans" dir="rtl">
+      <div className="absolute inset-0 bg-devee-red/5 blur-[120px] pointer-events-none" />
       
-      {/* Background Glows */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-devee-red/10 rounded-full blur-[120px]" />
-      </div>
-
-      <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
-        <img 
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/app_logo-aYPTnKATSOGLPTmF7VmPsJPmCkh6HF.png" 
-          alt="deVee" 
-          crossOrigin="anonymous"
-          className="h-20 w-auto drop-shadow-[0_0_20px_rgba(178,34,34,0.3)]"
-        />
-        <h1 className="mt-4 text-sm font-light tracking-[0.4em] text-white/50 uppercase">File Converter</h1>
+      <header className="mb-12 flex flex-col items-center gap-4 relative z-10">
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/app_logo-aYPTnKATSOGLPTmF7VmPsJPmCkh6HF.png" alt="deVee" className="h-16" />
+        <h1 className="text-xs tracking-[0.5em] text-white/40 uppercase">File Converter</h1>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="w-full max-w-xl bg-white/[0.03] backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 border border-white/5 shadow-2xl relative z-20">
-          
-          {/* Dropzone */}
-          <div 
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setIsDragOver(false); setFile(e.dataTransfer.files[0]); }}
-            className={`relative border-2 border-dashed rounded-2xl p-12 transition-all flex flex-col items-center gap-4 cursor-pointer
-              ${isDragOver ? 'border-devee-red bg-devee-red/10' : 'border-white/10 hover:border-devee-red/40'}`}
-          >
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-30" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-            <div className="w-20 h-20 rounded-full flex items-center justify-center bg-white/5 relative z-10">
-              {file ? <Check className="text-devee-red w-8 h-8" /> : <Upload className="text-white/30 w-8 h-8" />}
-            </div>
-            <p className="text-xl font-light z-10 text-center">{file ? file.name : "גרור קובץ לכאן"}</p>
+      <div className="w-full max-w-lg bg-white/[0.03] backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative z-10">
+        <div className="border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center gap-4 hover:border-devee-red/30 transition-all cursor-pointer relative">
+          <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+            {file ? <Check className="text-devee-red" /> : <Upload className="text-white/20" />}
           </div>
-
-          {/* Selector */}
-          <div className="relative z-[100]">
-            <button 
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between text-white/70"
-            >
-              <ChevronDown className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              <span>{selectedFormat || "בחר פורמט יעד"}</span>
-            </button>
-            
-            {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[110] max-h-[250px] overflow-y-auto shadow-2xl">
-                {Object.entries(formatCategories).map(([key, cat]) => (
-                  <div key={key} className="border-b border-white/5">
-                    <div className="px-5 py-2 bg-white/[0.02] text-[10px] text-white/30 uppercase flex items-center justify-between">
-                      <cat.icon size={12} /> {cat.label}
-                    </div>
-                    <div className="grid grid-cols-4 gap-2 p-3">
-                      {cat.formats.map(f => (
-                        <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }} className={`p-2 rounded-lg text-[10px] font-mono border ${selectedFormat === f ? 'bg-devee-red border-devee-red' : 'bg-white/5 border-transparent'}`}>
-                          {f}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Convert Button */}
-          <button 
-            type="button"
-            onClick={(e) => { e.preventDefault(); handleConvert(); }}
-            disabled={!file || !selectedFormat || isConverting}
-            className={`w-full py-5 rounded-2xl font-bold uppercase transition-all relative z-10
-              ${(!file || !selectedFormat) ? 'bg-white/5 text-white/10' : 'bg-devee-red text-white shadow-lg'}`}
-          >
-            {isConverting ? <div className="flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={18} /> {progressMsg}</div> : "המר קובץ"}
-          </button>
+          <p className="text-sm font-light text-white/60">{file ? file.name : "בחר קובץ להמרה"}</p>
         </div>
-      </main>
 
-      <footer className="relative z-10 py-12 flex flex-col items-center gap-4">
-        <p className="text-[11px] tracking-widest text-white/50">Powered by deVee Boutique Label</p>
-        <img 
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" 
-          alt="deVee Label" 
-          crossOrigin="anonymous"
-          className="h-16 w-16 rounded-full border border-white/10"
-        />
+        <div className="mt-6 relative">
+          <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full bg-white/5 p-4 rounded-xl flex justify-between items-center text-sm">
+            <ChevronDown size={16} className={isDropdownOpen ? "rotate-180" : ""} />
+            {selectedFormat || "בחר פורמט"}
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="absolute top-full mt-2 w-full bg-[#111] border border-white/10 rounded-xl overflow-hidden z-[100] max-h-60 overflow-y-auto">
+              {Object.entries(formatCategories).map(([key, cat]) => (
+                <div key={key}>
+                  <div className="px-4 py-2 bg-white/5 text-[10px] text-white/30 uppercase tracking-widest">{cat.label}</div>
+                  <div className="grid grid-cols-4 gap-1 p-2">
+                    {cat.formats.map(f => (
+                      <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }} className={`p-2 text-[10px] rounded-md border ${selectedFormat === f ? 'bg-devee-red border-devee-red' : 'border-transparent bg-white/5'}`}>{f}</button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button 
+          onClick={handleConvert} 
+          disabled={!file || !selectedFormat || isConverting}
+          className={`w-full mt-8 py-4 rounded-xl font-bold tracking-widest transition-all ${(!file || !selectedFormat) ? 'bg-white/5 text-white/10' : 'bg-devee-red text-white'}`}
+        >
+          {isConverting ? <div className="flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={18} /> {progressMsg}</div> : "בצע המרה"}
+        </button>
+      </div>
+
+      <footer className="mt-12 flex flex-col items-center gap-4 text-[10px] tracking-[0.3em] text-white/20 uppercase">
+        <p>Powered by deVee Boutique Label</p>
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" alt="deVee" className="h-12 w-12 rounded-full opacity-50" />
       </footer>
     </div>
   )
