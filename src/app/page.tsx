@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Upload, ChevronDown, Loader2, Check } from "lucide-react"
+import { Upload, ChevronDown, Loader2, Check, FileAudio, FileVideo, FileImage } from "lucide-react"
 
 export default function FileConverterPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -15,30 +15,21 @@ export default function FileConverterPage() {
   const ffmpegRef = useRef<any>(null)
 
   useEffect(() => {
-    setMounted(true);
-    document.title = "File Converter";
-    
-    const link = document.createElement('link');
-    link.rel = 'preconnect';
-    link.href = 'https://cdnjs.cloudflare.com';
-    document.head.appendChild(link);
-  }, []);
+    setMounted(true)
+    // עדכון כותרת הכרטיסיה בדפדפן
+    document.title = "File Converter"
+  }, [])
 
   const loadFFmpeg = async () => {
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
-    
     const { FFmpeg } = await import("@ffmpeg/ffmpeg")
     const { toBlobURL } = await import("@ffmpeg/util")
-    
     const ffmpeg = new FFmpeg()
-    const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/dist/umd";
-    
+    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
-    
     ffmpegRef.current = ffmpeg
     return ffmpeg;
   };
@@ -46,32 +37,18 @@ export default function FileConverterPage() {
   const handleConvert = async () => {
     if (!file || !selectedFormat) return
     setIsConverting(true)
-    
     try {
-      // זיהוי אם המשתמש בספארי או בנייד
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat.toUpperCase());
-
-      // ה-Hybrid Mode: בספארי או מובייל שולחים לשרת כדי לעקוף את הלאג
-      if (isSafari || isMobile || isImage) {
-        setProgressMsg("ממיר בשרת deVee (מהיר)...");
+      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat.toUpperCase())
+      if (isImage) {
+        setProgressMsg("ממיר תמונה...")
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
-        
         const response = await fetch('/api/convert', { method: 'POST', body: formData })
-        
-        if (!response.ok) {
-            // אם השרת נופל/לא תומך, ננסה בכל זאת מקומית כגיבוי
-            throw new Error("Server attempt failed");
-        }
-        
         downloadFile(await response.blob(), selectedFormat)
       } else {
-        // במחשב (Chrome/Edge) - ממשיכים עם המנוע המקומי שעובד פגז
         const { fetchFile } = await import("@ffmpeg/util")
-        setProgressMsg("טוען מנוע מקומי...")
+        setProgressMsg("טוען מנוע...")
         const ffmpeg = await loadFFmpeg();
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         setProgressMsg("מעבד מדיה...")
@@ -81,20 +58,7 @@ export default function FileConverterPage() {
         downloadFile(new Blob([data as any]), selectedFormat)
       }
     } catch (e) {
-      console.error(e)
-      // אם הגענו לכאן ויש שגיאה, כנראה שצריך לחזור למנוע המקומי כ-Last Resort
-      try {
-        setProgressMsg("מנסה המרה מקומית...")
-        const { fetchFile } = await import("@ffmpeg/util")
-        const ffmpeg = await loadFFmpeg()
-        await ffmpeg.writeFile(file.name, await fetchFile(file))
-        const outputName = `output.${selectedFormat.toLowerCase()}`
-        await ffmpeg.exec(['-i', file.name, outputName])
-        const data = await ffmpeg.readFile(outputName)
-        downloadFile(new Blob([data as any]), selectedFormat)
-      } catch (innerE) {
-        alert("שגיאה בהמרה. אנא נסה להשתמש ב-Chrome במחשב.")
-      }
+      alert("שגיאה בהמרה")
     } finally {
       setIsConverting(false)
     }
