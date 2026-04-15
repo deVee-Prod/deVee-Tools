@@ -22,14 +22,22 @@ export default function FileConverterPage() {
 
   const loadFFmpeg = async () => {
     if (ffmpegRef.current && ffmpegRef.current.loaded) return ffmpegRef.current;
+    
     const { FFmpeg } = await import("@ffmpeg/ffmpeg")
     const { toBlobURL } = await import("@ffmpeg/util")
+    
     const ffmpeg = new FFmpeg()
+    
+    // כתובת הליבה של המנוע
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+      // הוספת השורה הזו בשביל ספארי ודפדפנים מחמירים:
+      workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
+    
     ffmpegRef.current = ffmpeg
     return ffmpeg;
   };
