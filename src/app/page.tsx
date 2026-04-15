@@ -16,6 +16,8 @@ export default function FileConverterPage() {
 
   useEffect(() => {
     setMounted(true)
+    // עדכון כותרת הכרטיסיה בדפדפן
+    document.title = "File Converter"
   }, [])
 
   const loadFFmpeg = async () => {
@@ -74,6 +76,8 @@ export default function FileConverterPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
+      
+      {/* Background Glows */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#b22222]/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-[#b22222]/5 rounded-full blur-[100px]" />
@@ -134,7 +138,7 @@ export default function FileConverterPage() {
       </main>
 
       <footer className="relative z-10 py-12 flex flex-col items-center gap-4">
-        <p className="text-[10px] tracking-[0.2em] text-white/30 uppercase">Powered by deVee Boutique Label</p>
+        <p className="text-[10px] tracking-[0.2em] text-white/30">Powered By deVee Boutique Label</p>
         <img 
           src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/label_logo.jpg-vPg3UFlrczb9jCMrs4nyzOOJ7ozxYs.png" 
           crossOrigin="anonymous"
