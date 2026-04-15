@@ -27,16 +27,20 @@ export default function FileConverterPage() {
     const { toBlobURL } = await import("@ffmpeg/util")
     
     const ffmpeg = new FFmpeg()
-    
-    // כתובת הליבה של המנוע
     const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+    
+    setProgressMsg("מכין מנוע לספארי...")
     
     await ffmpeg.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-      // הוספת השורה הזו בשביל ספארי ודפדפנים מחמירים:
+      // זה הקסם לספארי - נותן לו ערוץ נפרד לעבוד בו
       workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
     });
+    
+    ffmpegRef.current = ffmpeg
+    return ffmpeg;
+  };
     
     ffmpegRef.current = ffmpeg
     return ffmpeg;
