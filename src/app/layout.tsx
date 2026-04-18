@@ -13,11 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "File Converter",
+  title: "File Converter | deVee Boutique Label",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+    // v=3 גורם לדפדפן לרענן את האייקון מהזיכרון שלו
+    icon: [
+      { url: "/icon.png?v=3", href: "/icon.png?v=3" },
+    ],
+    apple: [
+      { url: "/icon.png?v=3", href: "/icon.png?v=3" },
+    ],
   },
 };
 
@@ -29,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        {/* זה ה-Turbo לספארי */}
+        {/* השארתי לך את הסרביס וורקר כדי שההמרה תמשיך לעבוד חלק */}
         <script src="/coi-serviceworker.js" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
