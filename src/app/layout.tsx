@@ -13,12 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "File Converter | deVee Boutique Label",
+  title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    // השם המדויק של הקובץ שיושב לך ב-public
-    icon: "/icon.png",
-    apple: "/icon.png",
+    icon: "/devee-icon-2026.png",
+    apple: "/devee-icon-2026.png",
   },
 };
 

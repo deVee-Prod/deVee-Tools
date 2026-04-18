@@ -82,9 +82,9 @@ export default function FileConverterPage() {
       </div>
 
       <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
-        {/* שימוש בשם הקובץ המדויק שלך */}
+        {/* שימוש בשם הקובץ החדש והייחודי כדי לשבור קאש לצמיתות */}
         <img 
-          src="/icon.png?v=3" 
+          src="/devee-icon-2026.png" 
           alt="File Converter Logo"
           className="h-20 w-auto relative z-10 drop-shadow-[0_0_20px_rgba(178,34,34,0.3)]" 
         />
