@@ -31,7 +31,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" type="image/png" href="/api/favicon" />
         <link rel="apple-touch-icon" href="/api/favicon" />
-        <script src="/coi-serviceworker.js" async></script>
+       <script src="/coi-serviceworker.js" defer></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
         {children}
