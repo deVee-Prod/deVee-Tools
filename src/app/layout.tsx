@@ -16,11 +16,14 @@ export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: "/devee-icon-2026.png?v=final",
-    apple: "/devee-icon-2026.png?v=final",
+    icon: [
+      { url: "/devee-icon-2026.png?v=2026final", type: "image/png" },
+    ],
+    apple: [
+      { url: "/devee-icon-2026.png?v=2026final" },
+    ],
   },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
