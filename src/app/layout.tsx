@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "File Converter | deVee Boutique Label",
+  title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
     icon: [
