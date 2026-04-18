@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: "/devee-icon-2026.png",
-    apple: "/devee-icon-2026.png",
+    icon: "/devee-icon-2026.png?v=final",
+    apple: "/devee-icon-2026.png?v=final",
   },
 };
 
@@ -29,6 +29,9 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
+        {/* דורסים את הזיכרון של כרום עם קישור ישיר וחזק לפאביקון */}
+        <link rel="icon" type="image/png" href="/devee-icon-2026.png?v=final" />
+        <link rel="apple-touch-icon" href="/devee-icon-2026.png?v=final" />
         <script src="/coi-serviceworker.js" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
