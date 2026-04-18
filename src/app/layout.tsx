@@ -16,14 +16,11 @@ export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: [
-      { url: "/devee-icon-2026.png?v=2026final", type: "image/png" },
-    ],
-    apple: [
-      { url: "/devee-icon-2026.png?v=2026final" },
-    ],
+    icon: "/api/favicon",
+    apple: "/api/favicon",
   },
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,9 +29,8 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        {/* דורסים את הזיכרון של כרום עם קישור ישיר וחזק לפאביקון */}
-        <link rel="icon" type="image/png" href="/devee-icon-2026.png?v=final" />
-        <link rel="apple-touch-icon" href="/devee-icon-2026.png?v=final" />
+        <link rel="icon" type="image/png" href="/api/favicon" />
+        <link rel="apple-touch-icon" href="/api/favicon" />
         <script src="/coi-serviceworker.js" async></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}>
