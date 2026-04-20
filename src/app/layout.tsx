@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
 export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icons: {
-    icon: '/favicon.png', // הנתיב לקובץ בתוך public
-    shortcut: '/favicon.png',
-    apple: '/favicon.png',
+    icon: '/icon.png',    // עודכן מ-favicon ל-icon לפי מה שמופיע בתיקיית public שלך
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
-}
 };
+
 export default function RootLayout({
   children,
 }: Readonly<{
