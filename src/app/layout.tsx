@@ -13,13 +13,12 @@ export const metadata: Metadata = {
   title: "File Converter",
   description: "Professional media conversion tools by deVee Boutique Label",
   icons: {
-    icon: [
-      { url: "/devee-icon-2026.png?v=1", href: "/devee-icon-2026.png?v=1" },
-    ],
-    apple: [
-      { url: "/apple-touch-icon.png?v=1", href: "/apple-touch-icon.png?v=1" },
-    ],
+    icons: {
+    icon: '/favicon.png', // הנתיב לקובץ בתוך public
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
+}
 };
 export default function RootLayout({
   children,
