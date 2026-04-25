@@ -37,9 +37,12 @@ export default function FileConverterPage() {
     if (!file || !selectedFormat) return
     setIsConverting(true)
     try {
-      const isImage = ["JPG", "PNG", "WEBP", "GIF"].includes(selectedFormat.toUpperCase())
-      if (isImage) {
-        setProgressMsg("ממיר תמונה...")
+      // שינוי: הוספנו PDF לרשימת הפורמטים שמטופלים בשרת Python
+      const isImage = ["JPG", "PNG", "WEBP", "GIF", "PDF"].includes(selectedFormat.toUpperCase())
+      const isImageFile = file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".pdf")
+      
+      if (isImage || isImageFile) {
+        setProgressMsg("ממיר קובץ...")
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
@@ -117,7 +120,8 @@ export default function FileConverterPage() {
             {isDropdownOpen && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[999] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="p-3 grid grid-cols-4 gap-2" dir="ltr">
-                  {["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "MP4", "MOV", "AVI", "MKV", "WEBM", "PNG", "JPG", "WEBP", "GIF", "SVG"].map(f => (
+                  {/* שינוי: הוספנו PDF לרשימה */}
+                  {["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "MP4", "MOV", "AVI", "MKV", "WEBM", "PNG", "JPG", "WEBP", "GIF", "SVG", "PDF"].map(f => (
                     <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }} 
                     className={`p-3 rounded-xl text-[10px] font-mono border transition-all ${selectedFormat === f ? 'bg-[#b22222] border-[#b22222] text-white' : 'bg-white/5 border-transparent text-white/60 hover:bg-white/10'}`}>
                       {f}
