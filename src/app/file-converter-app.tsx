@@ -52,7 +52,13 @@ export default function FileConverterApp() {
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         setProgressMsg("מעבד מדיה...")
         const outputName = `output.${selectedFormat.toLowerCase()}`
-        await ffmpeg.exec(['-i', file.name, outputName])
+
+        // deVee Boutique Label — MP3 standard: 320kbps CBR @ 44,100Hz stereo
+        const ffmpegArgs = selectedFormat.toUpperCase() === 'MP3'
+          ? ['-i', file.name, '-b:a', '320k', '-ar', '44100', '-ac', '2', outputName]
+          : ['-i', file.name, outputName]
+
+        await ffmpeg.exec(ffmpegArgs)
         const data = await ffmpeg.readFile(outputName)
         downloadFile(new Blob([data as any]), selectedFormat)
       }
