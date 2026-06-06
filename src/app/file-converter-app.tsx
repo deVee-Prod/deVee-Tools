@@ -78,7 +78,7 @@ export default function FileConverterApp() {
   }
 
   return (
-    <div className="min-h-screen text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
+    <div className="min-h-[100dvh] text-white flex flex-col relative overflow-hidden font-sans" dir="rtl">
 
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#b22222]/10 rounded-full blur-[120px]" />
