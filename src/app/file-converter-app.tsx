@@ -142,7 +142,7 @@ export default function FileConverterApp() {
       <footer className="relative z-10 py-12 flex flex-col items-center gap-4">
         <p className="text-[10px] tracking-[0.2em] text-white/30">Powered By deVee Boutique Label</p>
         <img
-          src="/label_logo.jpg?v=3"
+          src="/label_logo.png?v=3"
           alt="deVee Label"
           className="h-14 w-14 rounded-full border border-white/10 opacity-70"
         />
