@@ -51,20 +51,16 @@ export default function FileConverterApp() {
         const ffmpeg = await loadFFmpeg();
         await ffmpeg.writeFile(file.name, await fetchFile(file))
         setProgressMsg("מעבד מדיה...")
-        const actualFormat = selectedFormat.toUpperCase() === 'MP3 LOW' ? 'MP3' : selectedFormat.toUpperCase()
-        const outputName = `output.${actualFormat.toLowerCase()}`
+        const outputName = `output.${selectedFormat.toLowerCase()}`
 
         // deVee Boutique Label — MP3 standard: 320kbps CBR @ 44,100Hz stereo
-        let ffmpegArgs = ['-i', file.name, outputName]
-        if (selectedFormat.toUpperCase() === 'MP3') {
-          ffmpegArgs = ['-i', file.name, '-b:a', '320k', '-ar', '44100', '-ac', '2', outputName]
-        } else if (selectedFormat.toUpperCase() === 'MP3 LOW') {
-          ffmpegArgs = ['-i', file.name, '-b:a', '64k', '-ar', '22050', '-ac', '1', outputName]
-        }
+        const ffmpegArgs = selectedFormat.toUpperCase() === 'MP3'
+          ? ['-i', file.name, '-b:a', '320k', '-ar', '44100', '-ac', '2', outputName]
+          : ['-i', file.name, outputName]
 
         await ffmpeg.exec(ffmpegArgs)
         const data = await ffmpeg.readFile(outputName)
-        downloadFile(new Blob([data as any]), actualFormat)
+        downloadFile(new Blob([data as any]), selectedFormat)
       }
     } catch (e) {
       alert("שגיאה בהמרה")
@@ -124,7 +120,7 @@ export default function FileConverterApp() {
             {isDropdownOpen && (
               <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[999] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="p-3 grid grid-cols-4 gap-2" dir="ltr">
-                  {["MP3", "MP3 Low", "WAV", "FLAC", "AAC", "OGG", "M4A", "MP4", "MOV", "AVI", "MKV", "WEBM", "PNG", "JPG", "WEBP", "GIF", "SVG", "PDF"].map(f => (
+                  {["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "MP4", "MOV", "AVI", "MKV", "WEBM", "PNG", "JPG", "WEBP", "GIF", "SVG", "PDF"].map(f => (
                     <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }}
                     className={`p-3 rounded-xl text-[10px] font-mono border transition-all ${selectedFormat === f ? 'bg-[#b22222] border-[#b22222] text-white' : 'bg-white/5 border-transparent text-white/60 hover:bg-white/10'}`}>
                       {f}
