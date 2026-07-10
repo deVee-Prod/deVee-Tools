@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "File Converter",
-  description: "Professional media conversion tools by deVee Boutique Label",
+  description: "Convert files easily: PNG to PDF, WAV to MP3, and much more.",
   icons: {
     icon: '/icon.png',    // עודכן מ-favicon ל-icon לפי מה שמופיע בתיקיית public שלך
     shortcut: '/icon.png',
