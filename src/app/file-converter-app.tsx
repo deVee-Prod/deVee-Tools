@@ -9,7 +9,7 @@ export default function FileConverterApp() {
   const [selectedFormat, setSelectedFormat] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
-  const [progressMsg, setProgressMsg] = useState("ממיר קובץ...")
+  const [progressMsg, setProgressMsg] = useState("Converting file...")
 
   const ffmpegRef = useRef<any>(null)
 
@@ -39,7 +39,7 @@ export default function FileConverterApp() {
       const isImageFile = file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".pdf")
 
       if (isImage || isImageFile) {
-        setProgressMsg("ממיר קובץ...")
+        setProgressMsg("Converting file...")
         const formData = new FormData()
         formData.append('file', file)
         formData.append('format', selectedFormat)
@@ -47,10 +47,10 @@ export default function FileConverterApp() {
         downloadFile(await response.blob(), selectedFormat)
       } else {
         const { fetchFile } = await import("@ffmpeg/util")
-        setProgressMsg("טוען מנוע...")
+        setProgressMsg("Loading engine...")
         const ffmpeg = await loadFFmpeg();
         await ffmpeg.writeFile(file.name, await fetchFile(file))
-        setProgressMsg("מעבד מדיה...")
+        setProgressMsg("Processing media...")
         const outputName = `output.${selectedFormat.toLowerCase()}`
 
         // deVee Boutique Label — MP3 standard: 320kbps CBR @ 44,100Hz stereo
@@ -63,7 +63,7 @@ export default function FileConverterApp() {
         downloadFile(new Blob([data as any]), selectedFormat)
       }
     } catch (e) {
-      alert("שגיאה בהמרה")
+      alert("Conversion Error")
     } finally {
       setIsConverting(false)
     }
@@ -104,13 +104,13 @@ export default function FileConverterApp() {
             <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${file ? 'bg-[#b22222]/20' : 'bg-white/5 shadow-inner'}`}>
               {file ? <Check className="text-[#b22222] w-8 h-8" /> : <Upload className="text-white/20 w-8 h-8" />}
             </div>
-            <p className="text-xl font-light tracking-wide">{file ? file.name : "גרור קובץ לכאן"}</p>
+            <p className="text-xl font-light tracking-wide">{file ? file.name : "Drag file here"}</p>
           </div>
 
           <div className="relative z-[999]">
             <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all">
               <ChevronDown className={`w-5 h-5 text-white/30 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              <span className={selectedFormat ? "text-white" : "text-white/30"}>{selectedFormat || "בחר פורמט יעד"}</span>
+              <span className={selectedFormat ? "text-white" : "text-white/30"}>{selectedFormat || "Select target format"}</span>
             </button>
 
             {isDropdownOpen && (
@@ -130,7 +130,7 @@ export default function FileConverterApp() {
           <button onClick={handleConvert} disabled={!file || !selectedFormat || isConverting}
             className={`w-full py-5 rounded-2xl font-bold tracking-[0.3em] uppercase transition-all duration-500 relative z-10
               ${(!file || !selectedFormat) ? 'bg-white/5 text-white/10' : 'bg-[#b22222] text-white hover:shadow-[0_0_40px_rgba(178,34,34,0.4)]'}`}>
-            {isConverting ? <div className="flex items-center justify-center gap-3"><Loader2 className="animate-spin" size={20} /> <span>{progressMsg}</span></div> : "בצע המרה"}
+            {isConverting ? <div className="flex items-center justify-center gap-3"><Loader2 className="animate-spin" size={20} /> <span>{progressMsg}</span></div> : "Convert"}
           </button>
         </div>
       </main>
