@@ -85,13 +85,9 @@ export default function FileConverterApp() {
         <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-[#b22222]/5 rounded-full blur-[100px]" />
       </div>
 
-      <header className="relative z-10 pt-12 pb-4 flex flex-col items-center">
-        <img
-          src="/devee-icon-2026.png"
-          alt="File Converter Logo"
-          className="h-20 w-auto relative z-10 drop-shadow-[0_0_20px_rgba(178,34,34,0.3)]"
-        />
-        <h1 className="mt-4 text-[10px] font-light tracking-[0.4em] text-white/40 uppercase">File Converter</h1>
+      <header className="relative z-20 flex flex-col items-center shrink-0 mb-4 pt-6">
+        <img src="/devee-icon-2026.png" alt="File Converter Logo" className="w-[100px] h-[100px] mb-2 object-contain" />
+        <h1 className="text-[10px] font-bold tracking-[0.5em] uppercase text-white/60">File Converter</h1>
       </header>
 
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
