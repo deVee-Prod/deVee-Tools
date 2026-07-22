@@ -73,7 +73,12 @@ export default function FileConverterApp() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `deVee_${file?.name.split('.')[0]}.${format.toLowerCase()}`
+    const rawName = file?.name || 'file'
+    const lastDotIndex = rawName.lastIndexOf('.')
+    const baseName = lastDotIndex > 0 ? rawName.substring(0, lastDotIndex) : rawName
+    const fmt = format.toLowerCase()
+    const extra = fmt === 'mp3' ? '(High Quality Mp3)' : ''
+    a.download = `${baseName}${extra}.${fmt}`
     a.click()
   }
 
