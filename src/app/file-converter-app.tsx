@@ -98,19 +98,26 @@ export default function FileConverterApp() {
  <main className="flex-1 flex items-center justify-center p-6 relative z-10">
  <div className="w-full max-w-xl bg-white/[0.03] backdrop-blur-3xl rounded-[2.5rem] p-10 space-y-8 border border-white/5 shadow-2xl relative z-20">
 
- <div
- onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
- onDragLeave={() => setIsDragOver(false)}
- onDrop={(e) => { e.preventDefault(); setIsDragOver(false); setFile(e.dataTransfer.files[0]); }}
- className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-500 flex flex-col items-center gap-4 cursor-pointer z-10
- ${isDragOver ? 'border-[#b22222] bg-[#b22222]/10 scale-[1.01]' : 'border-white/10 hover:border-[#b22222]/30'}`}
- >
- <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => setFile(e.target.files?.[0] || null)} />
- <div className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${file ? 'bg-[#b22222]/20' : 'bg-white/5 shadow-inner'}`}>
- {file ? <Check className="text-[#b22222] w-8 h-8" /> : <Upload className="text-white/20 w-8 h-8" />}
- </div>
- <p className="text-xl font-light tracking-wide">{file ? file.name : "Drag file here"}</p>
- </div>
+  <div
+  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+  onDragLeave={() => setIsDragOver(false)}
+  onDrop={(e) => { e.preventDefault(); setIsDragOver(false); setFile(e.dataTransfer.files[0]); }}
+  className={`relative border-2 border-dashed rounded-2xl p-12 transition-all duration-500 flex flex-col items-center justify-center cursor-pointer z-10 group
+  ${isDragOver ? 'border-[#b22222] bg-[#b22222]/10 scale-[1.01]' : 'border-white/10 hover:border-[#b22222]/30'}`}
+  >
+  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer z-20" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+  {file ? (
+    <>
+      <Check className="text-[#b22222] mb-4 group-hover:scale-110 transition-transform" size={28} />
+      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-4 text-center">{file.name}</span>
+    </>
+  ) : (
+    <>
+      <Upload className="text-[#b22222] mb-4 group-hover:scale-110 transition-transform" size={28} />
+      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-4 text-center">Upload File</span>
+    </>
+  )}
+  </div>
 
  <div className="relative z-[999]">
  <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full bg-white/[0.03] border border-white/10 p-5 rounded-2xl flex items-center justify-between hover:bg-white/5 transition-all">
