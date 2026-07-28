@@ -127,7 +127,7 @@ export default function FileConverterApp() {
 
  {isDropdownOpen && (
  <div className="absolute top-full left-0 right-0 mt-3 bg-[#0f0f0f] border border-white/10 rounded-2xl z-[999] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
- <div className="p-3 grid grid-cols-4 gap-2" dir="ltr">
+ <div className="p-3 grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto" dir="ltr">
  {["MP3", "WAV", "FLAC", "AAC", "OGG", "M4A", "MP4", "MOV", "AVI", "MKV", "WEBM", "PNG", "JPG", "WEBP", "GIF", "SVG", "PDF"].map(f => (
  <button key={f} onClick={() => { setSelectedFormat(f); setIsDropdownOpen(false); }}
  className={`p-3 rounded-xl text-[10px] font-mono border transition-all ${selectedFormat === f ? 'bg-[#b22222] border-[#b22222] text-white' : 'bg-white/5 border-transparent text-white/60 hover:bg-white/10'}`}>
